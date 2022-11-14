@@ -105,7 +105,7 @@ resource "null_resource" "upgrade" {
     bastion_host = var.assign_floating_ip ? "" : var.bastion_host
     host         = var.assign_floating_ip ? openstack_networking_floatingip_v2.floating_ip[count.index].address : openstack_compute_instance_v2.instance[0].access_ip_v4
     user         = var.system_user
-    private_key  = var.use_ssh_agent ? null : file(var.ssh_key_file)
+    private_key  = var.use_ssh_agent ? null : var.ssh_key_file
     agent        = var.use_ssh_agent
   }
 
