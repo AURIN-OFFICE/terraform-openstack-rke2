@@ -21,7 +21,6 @@ jobs:
       OS_REGION_NAME:  ${{ secrets.OS_REGION_NAME }}
       OS_USERNAME:  ${{ secrets.OS_USERNAME }}
       OS_USER_DOMAIN_NAME:  ${{ secrets.OS_USER_DOMAIN_NAME }}
-      TF_VAR_dns_servers:  ${{ secrets.TF_VAR_DNS_SERVERS }}
     environment: nova
     steps:
     - uses: actions/checkout@v3
@@ -47,7 +46,7 @@ jobs:
         K8S_API_SERVER=$(terraform output -raw server_ip)
         until (nc -z $K8S_API_SERVER 6443); do echo Wait for master node && sleep 10; done;
       working-directory: examples/${{ matrix.TEST }}
-    - uses: azure/setup-kubectl@v3.0
+    - uses: azure/setup-kubectl@v3.2
     - name: Wait for nodes to be ready
       run: kubectl wait nodes --all --for=condition=ready --kubeconfig $(pwd)/rke2.yaml --timeout -1s
       working-directory: examples/${{ matrix.TEST }}
