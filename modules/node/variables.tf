@@ -146,6 +146,17 @@ variable "additional_san" {
   description = "RKE additional SAN"
 }
 
+variable "additional_configs_path" {
+  type        = string
+  default     = ""
+  description = "RKE2 additional config files"
+}
+
+variable "additional_configs_gzb64" {
+  type    = map(string)
+  default = {}
+}
+
 variable "manifests_path" {
   type        = string
   default     = ""
@@ -159,4 +170,14 @@ variable "manifests_gzb64" {
 
 variable "do_upgrade" {
   type = bool
+}
+
+variable "proxy_url" {
+  type    = string
+  default = null
+}
+
+variable "no_proxy" {
+  type    = list(string)
+  default = []
 }

@@ -30,7 +30,7 @@ write_files:
     fi
 %{ if bootstrap_server == "" ~}
   %{~ for f in manifests_files ~}
-- path: /var/lib/rancher/rke2/server/manifests/${f[0]}.yaml
+- path: /var/lib/rancher/rke2/server/manifests/${f[0]}
   permissions: "0600"
   owner: root:root
   encoding: gz+b64
@@ -74,7 +74,55 @@ write_files:
     kube-apiserver-arg: "kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname"
     %{~ endif ~}
     ${indent(4,rke2_conf)}
+%{ if is_server ~}
+  %{~ for f in additional_config_files ~}
+- path: /etc/rancher/rke2/${f[0]}
+  permissions: "0600"
+  owner: root:root
+  encoding: gz+b64
+  content: ${f[1]}
+  %{~ endfor ~}
+  %{~ for k, v in manifests_gzb64 ~}
+- path: /etc/rancher/rke2/${k}
+  permissions: "0600"
+  owner: root:root
+  encoding: gz+b64
+  content: ${v}
+  %{~ endfor ~}
+%{ endif ~}
+%{ if proxy_url != null ~}
+- path: /etc/environment
+  append: true
+  content: |
+    # BEGIN TERRAFORM MANAGED BLOCK
+    http_proxy=${proxy_url}
+    https_proxy=${proxy_url}
+    ftp_proxy=${proxy_url}
+    no_proxy=%{ for s in no_proxy ~}${s},%{ endfor }
+    # END TERRAFORM MANAGED BLOCK
+- path: /etc/default/rke2-server
+  append: true
+  content: |
+    # BEGIN TERRAFORM MANAGED BLOCK
+    HTTP_PROXY=${proxy_url}
+    HTTPS_PROXY=${proxy_url}
+    NO_PROXY=%{ for s in no_proxy ~}${s},%{ endfor }
+    # END TERRAFORM MANAGED BLOCK
+- path: /etc/default/rke2-agent
+  append: true
+  content: |
+    # BEGIN TERRAFORM MANAGED BLOCK
+    HTTP_PROXY=${proxy_url}
+    HTTPS_PROXY=${proxy_url}
+    NO_PROXY=%{ for s in no_proxy ~}${s},%{ endfor }
+    # END TERRAFORM MANAGED BLOCK
+%{ endif ~}
 runcmd:
+%{ if proxy_url != null ~}
+  - export http_proxy=${proxy_url}
+  - export https_proxy=${proxy_url}
+  - export no_proxy=%{ for s in no_proxy ~}${s},%{ endfor }${bootstrap_server}
+%{ endif ~}
   - /usr/local/bin/install-or-upgrade-rke2.sh
   %{~ if is_server ~}
     %{~ if bootstrap_server != "" ~}
